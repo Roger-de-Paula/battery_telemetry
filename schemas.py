@@ -52,3 +52,14 @@ class DailySummaryResponse(BaseModel):
     device_id: str
     date: str
     summary: dict[str, MetricSummary]
+
+
+class ErrorDetail(BaseModel):
+    loc: list[str]
+    msg: str
+    type: str
+
+
+class ErrorResponse(BaseModel):
+    detail: str
+    errors: list[ErrorDetail] | None = None
