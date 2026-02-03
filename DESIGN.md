@@ -61,7 +61,7 @@ Partitioning by `timestamp` (e.g. LIST/RANGE by month) keeps 7-day queries on a 
 
 ## What we’d improve with more time
 
-- **Tests:** Pytest for API (validation, rate limit, metrics/summary responses) and worker (offline detection and deduplication).
+- **Tests:** API tests are in place (pytest, in-memory SQLite): health, ingestion, validation, 404s, time range, summary with/without data, rate limit. Worker tests (offline detection and deduplication) could be added.
 - **Structured logging:** Request IDs, JSON logs, and log levels for production.
 - **Configurable worker interval and threshold** via env (e.g. check every 1 min, offline after 5 min).
 - **Redis rate limiting** for multi-instance deployments.

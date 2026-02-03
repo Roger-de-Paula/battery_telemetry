@@ -56,6 +56,14 @@ FastAPI service that ingests battery telemetry, stores it in PostgreSQL, and pro
 API: http://127.0.0.1:8000  
 Docs: http://127.0.0.1:8000/docs
 
+## Testing
+
+Run the test suite (uses in-memory SQLite; no PostgreSQL required):
+
+```bash
+python -m pytest -v
+```
+
 ## Docker
 
 From the project root:
