@@ -1,9 +1,10 @@
-from fastapi import Depends, FastAPI, status
+from fastapi import Depends, FastAPI, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_session
 from models import Device, Telemetry
+from rate_limiter import get_rate_limiter
 from schemas import TelemetryCreate
 
 app = FastAPI(title="Battery Telemetry API", version="0.1.0")
@@ -19,6 +20,9 @@ async def post_telemetry(
     body: TelemetryCreate,
     session: AsyncSession = Depends(get_session),
 ):
+    limiter = get_rate_limiter()
+    if await limiter.is_rate_limited(body.device_id):
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Rate limit exceeded")
     result = await session.execute(select(Device).where(Device.device_id == body.device_id))
     device = result.scalar_one_or_none()
     if device is None:

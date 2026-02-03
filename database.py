@@ -8,6 +8,8 @@ from models import Base
 class Settings(BaseSettings):
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
     database_url: str = "postgresql+asyncpg://user:password@localhost:5432/battery_telemetry"
+    rate_limit_requests: int = 10
+    rate_limit_window_seconds: float = 1.0
 
 
 _settings: Settings | None = None
