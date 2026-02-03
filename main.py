@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -94,6 +94,12 @@ async def post_telemetry(
     return {"status": "created"}
 
 
+# Max time range (7-day queries supported; slightly larger to be flexible)
+METRICS_MAX_RANGE_DAYS = 8
+# Cap rows so 7-day queries at 30s interval (~20k points) are fine without unbounded load
+METRICS_MAX_ROWS = 50_000
+
+
 @app.get("/devices/{device_id}/metrics", response_model=TelemetryMetricsResponse)
 async def get_device_metrics(
     device_id: str,
@@ -101,9 +107,20 @@ async def get_device_metrics(
     end_time: datetime = Query(..., description="End of range (ISO 8601)"),
     session: AsyncSession = Depends(get_session),
 ):
+    if start_time > end_time:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="start_time must be before or equal to end_time",
+        )
+    if (end_time - start_time) > timedelta(days=METRICS_MAX_RANGE_DAYS):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Time range must not exceed {METRICS_MAX_RANGE_DAYS} days",
+        )
     result = await session.execute(select(Device).where(Device.device_id == device_id))
     if result.scalar_one_or_none() is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Device not found")
+    # Query uses idx_telemetry_device_timestamp (device_id, timestamp)
     stmt = (
         select(Telemetry)
         .where(
@@ -112,6 +129,7 @@ async def get_device_metrics(
             Telemetry.timestamp <= end_time,
         )
         .order_by(Telemetry.timestamp)
+        .limit(METRICS_MAX_ROWS)
     )
     rows = (await session.execute(stmt)).scalars().all()
     data = [
