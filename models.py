@@ -1,6 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
-from sqlalchemy import BigInteger, DateTime, ForeignKey, Numeric, String, func
+from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -25,8 +25,9 @@ class Device(Base):
 
 class Telemetry(Base):
     __tablename__ = "telemetry"
+    __table_args__ = {"sqlite_autoincrement": True}
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     device_id: Mapped[str] = mapped_column(
         String(64), ForeignKey("devices.device_id", ondelete="CASCADE"), nullable=False
     )
@@ -41,8 +42,9 @@ class Telemetry(Base):
 
 class Alert(Base):
     __tablename__ = "alerts"
+    __table_args__ = {"sqlite_autoincrement": True}
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     device_id: Mapped[str] = mapped_column(
         String(64), ForeignKey("devices.device_id", ondelete="CASCADE"), nullable=False
     )
